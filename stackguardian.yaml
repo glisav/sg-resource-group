@@ -1,0 +1,292 @@
+templateType: "IAC"
+subType: "TERRAFORM"
+name: "azure-resource-group"
+displayName: "Azure Resource Group"
+description: "Create and manage Azure Resource Groups with proper naming, tagging, and governance"
+version: "1.0.0"
+
+author:
+  name: "Platform Team"
+  email: "platform@company.com"
+
+tags:
+  - "azure"
+  - "resource-group"
+  - "foundation"
+  - "governance"
+
+category: "Infrastructure Foundation"
+
+# NoCode Interface Configuration
+inputs:
+  - name: "project_name"
+    displayName: "Project Name"
+    type: "string"
+    description: "Short identifier for your project (e.g., 'webapp', 'api', 'analytics')"
+    required: true
+    placeholder: "Enter project name"
+    validation:
+      pattern: "^[a-z0-9-]{3,20}$"
+      message: "Must be 3-20 characters, lowercase letters, numbers, and hyphens only"
+    helpText: "This will be used in the resource group name: rg-{project}-{environment}-{business_unit}"
+
+  - name: "environment"
+    displayName: "Environment"
+    type: "string"
+    description: "Target environment for this resource group"
+    required: true
+    inputType: "dropdown"
+    allowedValues:
+      - value: "dev"
+        label: "Development"
+        description: "Development environment for testing and experimentation"
+      - value: "test"
+        label: "Testing"
+        description: "Testing environment for QA and staging"
+      - value: "staging"
+        label: "Staging"
+        description: "Pre-production environment that mirrors production"
+      - value: "prod"
+        label: "Production"
+        description: "Live production environment"
+    default: "dev"
+
+  - name: "business_unit"
+    displayName: "Business Unit"
+    type: "string"
+    description: "Department or business unit owning this resource group"
+    required: true
+    inputType: "dropdown"
+    allowedValues:
+      - value: "hr"
+        label: "Human Resources"
+      - value: "finance"
+        label: "Finance & Accounting"
+      - value: "marketing"
+        label: "Marketing & Sales"
+      - value: "engineering"
+        label: "Engineering & Development"
+      - value: "operations"
+        label: "IT Operations"
+      - value: "security"
+        label: "Security & Compliance"
+      - value: "analytics"
+        label: "Data & Analytics"
+      - value: "shared"
+        label: "Shared Services"
+    default: "engineering"
+    helpText: "Used for cost allocation and access management"
+
+  - name: "location"
+    displayName: "Azure Region"
+    type: "string"
+    description: "Azure region where the resource group will be created"
+    required: true
+    inputType: "dropdown"
+    allowedValues:
+      - value: "West Europe"
+        label: "West Europe (Amsterdam)"
+      - value: "North Europe"
+        label: "North Europe (Dublin)"
+      - value: "East US"
+        label: "East US (Virginia)"
+      - value: "West US 2"
+        label: "West US 2 (Washington)"
+      - value: "Central US"
+        label: "Central US (Iowa)"
+      - value: "Southeast Asia"
+        label: "Southeast Asia (Singapore)"
+      - value: "Australia East"
+        label: "Australia East (Sydney)"
+    default: "West Europe"
+    helpText: "Choose the region closest to your users for better performance"
+
+  - name: "cost_center"
+    displayName: "Cost Center"
+    type: "string"
+    description: "Billing cost center for charge-back allocation"
+    required: true
+    placeholder: "e.g., 1001, 2045, 3012"
+    validation:
+      pattern: "^[0-9]{4,10}$"
+      message: "Must be 4-10 digits"
+    helpText: "Contact finance team if you don't know your cost center code"
+
+  - name: "owner_email"
+    displayName: "Resource Owner Email"
+    type: "string"
+    description: "Email address of the person responsible for this resource group"
+    required: true
+    inputType: "email"
+    placeholder: "owner@company.com"
+    validation:
+      pattern: "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+      message: "Must be a valid email address"
+    helpText: "Owner will receive notifications about resource changes and costs"
+
+  - name: "enable_resource_lock"
+    displayName: "Enable Resource Protection"
+    type: "boolean"
+    description: "Prevent accidental deletion of this resource group"
+    required: false
+    default: false
+    helpText: "Recommended for production environments. Can be disabled later if needed."
+
+  - name: "lock_level"
+    displayName: "Protection Level"
+    type: "string"
+    description: "Type of protection to apply"
+    required: false
+    inputType: "radio"
+    allowedValues:
+      - value: "CanNotDelete"
+        label: "Prevent Deletion"
+        description: "Resources can be modified but not deleted"
+      - value: "ReadOnly"
+        label: "Read Only"
+        description: "Resources cannot be modified or deleted"
+    default: "CanNotDelete"
+    dependsOn: "enable_resource_lock"
+    showWhen: "${inputs.enable_resource_lock == true}"
+    helpText: "CanNotDelete is recommended for most use cases"
+
+  - name: "additional_tags"
+    displayName: "Additional Tags"
+    type: "object"
+    description: "Optional custom tags for the resource group (key-value pairs)"
+    required: false
+    inputType: "key-value"
+    placeholder: "Key: Value"
+    default: {}
+    helpText: "Add any project-specific tags. Standard tags are applied automatically."
+
+# Template Outputs (what users will see after deployment)
+outputs:
+  - name: "resource_group_name"
+    displayName: "Resource Group Name"
+    description: "The name of the created resource group"
+
+  - name: "resource_group_id"
+    displayName: "Resource Group ID"
+    description: "Azure resource ID for the resource group"
+
+  - name: "location"
+    displayName: "Deployment Location"
+    description: "Azure region where the resource group was created"
+
+  - name: "full_resource_info"
+    displayName: "Complete Resource Information"
+    description: "All resource group details including tags and lock status"
+
+# Documentation for the NoCode interface
+documentation:
+  overview: |
+    This template creates an Azure Resource Group with:
+
+    ✅ **Standardized Naming**: Follows organization naming convention
+    ✅ **Proper Tagging**: Automatically applies governance tags
+    ✅ **Cost Tracking**: Links to cost center for billing
+    ✅ **Optional Protection**: Prevents accidental deletion
+    ✅ **Audit Trail**: Tracks owner and creation details
+
+  quickStart: |
+    **For Development/Testing**:
+    1. Choose your project name (short and descriptive)
+    2. Select "dev" or "test" environment
+    3. Choose your business unit
+    4. Enter your cost center and email
+    5. Deploy!
+
+    **For Production**:
+    1. Follow the same steps as above
+    2. Select "prod" environment  
+    3. ✅ Enable Resource Protection
+    4. Choose "Prevent Deletion" protection level
+    5. Review and deploy
+
+  bestPractices: |
+    **Naming Guidelines**:
+    - Use clear, short project names (3-20 chars)
+    - Avoid abbreviations that aren't obvious
+    - Use lowercase with hyphens for separation
+
+    **Environment Selection**:
+    - **dev**: Personal development, frequent changes
+    - **test**: Team testing, moderate stability
+    - **staging**: Pre-production, high stability
+    - **prod**: Live production, maximum protection
+
+    **Resource Protection**:
+    - Always enable for production environments
+    - Consider for important staging environments
+    - Use "Prevent Deletion" for most cases
+    - Only use "Read Only" for archived/compliance scenarios
+
+  afterDeployment: |
+    After deployment you can:
+    1. **View in Azure Portal**: Use the resource group name to find it
+    2. **Deploy Resources**: Use this resource group for other deployments
+    3. **Monitor Costs**: Track spending by cost center and tags
+    4. **Manage Access**: Assign users/groups appropriate permissions
+    5. **Add Resources**: Deploy additional infrastructure into this group
+
+# Template Validation Rules
+validation:
+  required:
+    - terraform_version: ">= 1.5"
+    - azurerm_provider: "~> 3.80"
+
+  policies:
+    - name: "naming_convention"
+      description: "Resource group follows organization naming standards"
+      rule: "startswith(resource.name, 'rg-')"
+
+    - name: "required_tags"
+      description: "All required governance tags are present"
+      rule: |
+        all([
+          has(resource.tags, "Project"),
+          has(resource.tags, "Environment"),
+          has(resource.tags, "BusinessUnit"),
+          has(resource.tags, "CostCenter"),
+          has(resource.tags, "Owner"),
+          has(resource.tags, "ManagedBy")
+        ])
+
+    - name: "production_protection"
+      description: "Production environments should have resource locks"
+      rule: "inputs.environment != 'prod' || inputs.enable_resource_lock == true"
+      severity: "warning"
+
+# UI Configuration for NoCode experience
+ui:
+  wizard:
+    enabled: true
+    steps:
+      - title: "Basic Information"
+        description: "Project identification and environment"
+        fields: ["project_name", "environment", "business_unit"]
+
+      - title: "Location and Billing"
+        description: "Where to deploy and how to track costs"
+        fields: ["location", "cost_center", "owner_email"]
+
+      - title: "Protection and Tags"
+        description: "Security settings and custom metadata"
+        fields: ["enable_resource_lock", "lock_level", "additional_tags"]
+
+  form:
+    layout: "two-column"
+    grouping:
+      - title: "Project Details"
+        fields: ["project_name", "environment", "business_unit"]
+      - title: "Deployment Settings"
+        fields: ["location", "cost_center", "owner_email"]
+      - title: "Protection & Tags"
+        fields: ["enable_resource_lock", "lock_level", "additional_tags"]
+
+  preview:
+    enabled: true
+    showResourceName: true
+    showEstimatedCost: false
+    showTags: true
